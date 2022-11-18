@@ -1,0 +1,30 @@
+pipeline {
+    agent {
+        node {
+            label 'built-in'
+        }
+    }
+    stages {
+        stage('Scm Checkout') {
+            steps {
+                cleanWs()
+                git branch: 'main', credentialsId: 'bitbucket-creds', url: 'https://bitbucket.omneemo.com/scm/cr/deliverycorporationbot.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "dotnet restore ${workspace}/DeliveryCorporationBot.sln"
+                sh "dotnet build ${workspace}/DeliveryCorporationBot.sln --configuration Release"
+            }
+        }
+        stage('RunContainer on Server') {
+            steps {
+                sh 'docker ps --filter ancestor=delivery-corporation-bot:1.0.0 -q | xargs -I {} docker container stop {}'
+                sh 'docker ps -a --filter ancestor=delivery-corporation-bot:1.0.0 -q | xargs -I {} docker container rm {}'
+                sh 'docker images -a delivery-corporation-bot -q | xargs -I {} docker image rm {}'
+                sh 'docker build -t delivery-corporation-bot:1.0.0 .'
+                sh 'docker run -p 5050:5050 -d delivery-corporation-bot:1.0.0'
+            }
+        }
+    }
+}
