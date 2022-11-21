@@ -91,15 +91,28 @@ namespace DeliveryCorporationBot
             }
         }
 
-        async Task BotOnMessageReceived(Message message) =>
-            await GetMessageCommands()
-                .First(command => command.Contains(message.Text))
-                .Execute(message);
+        async Task BotOnMessageReceived(Message message)
+        {
+            var command = GetMessageCommands()
+                .FirstOrDefault(command => command.Contains(message.Text));
 
-        async Task BotOnCallbackReceived(CallbackQuery query) =>
-            await GetInlineCommands()
-                .First(command => command.Contains(query.Data))
-                .Execute(query);
+            if(command != null)
+            {
+                await command.Execute(message);
+            }
+        }
+
+        async Task BotOnCallbackReceived(CallbackQuery query)
+        {
+            var command = GetInlineCommands()
+                .FirstOrDefault(command => command.Contains(query.Data));
+
+            if (command != null)
+            {
+                await command.Execute(query);
+            }
+        }
+        
 
         async Task CoffeeTimeScheduleStartAsync()
         {
